@@ -27,10 +27,12 @@ import coil.compose.AsyncImage
 fun PostCard(
     post: cardpublication,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
     onLike: () -> Unit = {},
     onShare: () -> Unit = {}
 ) {
     OutlinedCard(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.outlinedCardColors(
@@ -49,7 +51,7 @@ fun PostCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AvatarCircle()
+                AvatarCircle(post.name)
 
                 Spacer(Modifier.width(10.dp))
 
@@ -97,32 +99,41 @@ fun PostCard(
             // Acciones: Like / Share
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onLike) {
+                IconButton(onClick = onLike) {
                     Icon(Icons.Default.FavoriteBorder, contentDescription = "Me gusta")
-                    Spacer(Modifier.width(6.dp))
-                    Text("Me gusta")
                 }
-
-                TextButton(onClick = onShare) {
+                IconButton(onClick = onShare) {
                     Icon(Icons.Default.Share, contentDescription = "Compartir")
-                    Spacer(Modifier.width(6.dp))
-                    Text("Compartir")
                 }
             }
         }
     }
 }
 
+
 @Composable
-private fun AvatarCircle() {
+private fun AvatarCircle(name: String) {
+    val initials = name.trim()
+        .split(" ")
+        .filter { it.isNotBlank() }
+        .take(2)
+        .joinToString("") { it.first().uppercaseChar().toString() }
+
     Box(
         modifier = Modifier
             .size(44.dp)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-    )
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = initials.ifBlank { "?" },
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    }
 }
 
 @Composable
