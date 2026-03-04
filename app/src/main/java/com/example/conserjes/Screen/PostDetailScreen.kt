@@ -1,5 +1,8 @@
 package com.example.conserjes.Screen
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,13 +30,15 @@ import androidx.compose.ui.unit.dp
 import com.example.conserjes.Components.SelectedImage
 import com.example.conserjes.data.cardpublication
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun PostDetailScreen(
     post: cardpublication,
     onBack: () -> Unit,
     onLike: () -> Unit,
-    onShare: () -> Unit
+    onShare: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
     Scaffold(
         topBar = {
@@ -41,13 +46,15 @@ fun PostDetailScreen(
                 title = { Text("Post") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver"
+                        )
                     }
                 }
             )
         },
         bottomBar = {
-            // Acciones tipo X abajo
             NavigationBar {
                 NavigationBarItem(
                     selected = false,
@@ -71,26 +78,64 @@ fun PostDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header: avatar + nombre + handle + fecha
+
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // reutiliza tu avatar si quieres
-                // AvatarCircle(post.name)
-                Text(post.name, style = MaterialTheme.typography.titleMedium)
+
+                // ✅ Nombre: shared element
+                with(sharedTransitionScope) {
+                    Text(
+                        text = post.name,
+                        modifier = Modifier.sharedElement(
+                            sharedContentState = rememberSharedContentState(
+                                key = "postName-${post.id}"
+                            ),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
                 Spacer(Modifier.width(8.dp))
-                Text(post.handle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                Text(
+                    text = post.handle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            Text(post.dateTime, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-
-            // Texto grande
             Text(
-                text = post.content,
-                style = MaterialTheme.typography.titleLarge
+                text = post.dateTime,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Imagen grande si existe
+            // ✅ Contenido: shared element
+            with(sharedTransitionScope) {
+                Text(
+                    text = post.content,
+                    modifier = Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(
+                            key = "postContent-${post.id}"
+                        ),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+
+            // ✅ Imagen: shared element
             if (post.image != null) {
-                SelectedImage(post.image)
+                with(sharedTransitionScope) {
+                    SelectedImage(
+                        uri = post.image,
+                        modifier = Modifier.sharedElement(
+                            sharedContentState = rememberSharedContentState(
+                                key = "postImage-${post.id}"
+                            ),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
+                    )
+                }
             }
         }
     }

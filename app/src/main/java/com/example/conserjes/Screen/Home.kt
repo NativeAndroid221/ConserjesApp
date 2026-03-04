@@ -2,6 +2,8 @@ package com.example.conserjes.Screen
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -57,7 +59,9 @@ import com.example.conserjes.data.cardpublication
 fun HomeScreen(
     posts: List<cardpublication>,
     onFabClick: () -> Unit,
-    onPostClick: (String) -> Unit
+    onPostClick: (String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
     val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -184,7 +188,9 @@ fun HomeScreen(
                             post = post,
                             onClick = { onPostClick(post.id) },
                             onLike = { },
-                            onShare = { }
+                            onShare = { },
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope
 
 
                         )

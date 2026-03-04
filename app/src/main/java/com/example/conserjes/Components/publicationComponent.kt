@@ -1,7 +1,9 @@
 package com.example.conserjes.Components
 
-import com.example.conserjes.data.cardpublication
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,14 +24,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.conserjes.data.cardpublication
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun PostCard(
     post: cardpublication,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     onLike: () -> Unit = {},
-    onShare: () -> Unit = {}
+    onShare: () -> Unit = {},
+
+    // ✅ shared transition (opcional)
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
     OutlinedCard(
         onClick = onClick,
@@ -38,15 +46,11 @@ fun PostCard(
         colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant // ✅ mejor que Color.Black para dark mode
-        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.outlinedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
 
-            // Header: avatar + nombre/handle/fecha
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -56,14 +60,31 @@ fun PostCard(
                 Spacer(Modifier.width(10.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
+
+                        val nameModifier =
+                            if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                                with(sharedTransitionScope) {
+                                    Modifier.sharedElement(
+                                        sharedContentState = rememberSharedContentState(
+                                            key = "postName-${post.id}"
+                                        ),
+                                        animatedVisibilityScope = animatedVisibilityScope
+                                    )
+                                }
+                            } else Modifier
+
                         Text(
                             text = post.name,
+                            modifier = nameModifier,
                             style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+
                         Spacer(Modifier.width(8.dp))
+
                         Text(
                             text = post.handle,
                             style = MaterialTheme.typography.bodyMedium,
@@ -72,6 +93,7 @@ fun PostCard(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+
                     Text(
                         text = post.dateTime,
                         style = MaterialTheme.typography.bodySmall,
@@ -82,21 +104,47 @@ fun PostCard(
 
             Spacer(Modifier.height(10.dp))
 
-            // Contenido del texto
+            val contentModifier =
+                if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                    with(sharedTransitionScope) {
+                        Modifier.sharedElement(
+                            sharedContentState = rememberSharedContentState(
+                                key = "postContent-${post.id}"
+                            ),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
+                    }
+                } else Modifier
+
             Text(
                 text = post.content,
+                modifier = contentModifier,
                 style = MaterialTheme.typography.bodyLarge
             )
 
-            // Imagen (solo si existe)
             if (post.image != null) {
                 Spacer(Modifier.height(12.dp))
-                SelectedImage(post.image)
+
+                val imageModifier =
+                    if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                        with(sharedTransitionScope) {
+                            Modifier.sharedElement(
+                                sharedContentState = rememberSharedContentState(
+                                    key = "postImage-${post.id}"
+                                ),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            )
+                        }
+                    } else Modifier
+
+                SelectedImage(
+                    uri = post.image,
+                    modifier = imageModifier
+                )
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // Acciones: Like / Share
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -111,7 +159,6 @@ fun PostCard(
         }
     }
 }
-
 
 @Composable
 private fun AvatarCircle(name: String) {
@@ -136,12 +183,16 @@ private fun AvatarCircle(name: String) {
     }
 }
 
+/** ✅ MODIFICADO: ahora recibe modifier */
 @Composable
- fun SelectedImage(uri: Uri) {
+fun SelectedImage(
+    uri: Uri,
+    modifier: Modifier = Modifier
+) {
     AsyncImage(
         model = uri,
         contentDescription = "Imagen seleccionada",
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(200.dp)
             .clip(RoundedCornerShape(14.dp)),
@@ -150,7 +201,7 @@ private fun AvatarCircle(name: String) {
 }
 
 @Composable
- fun ImagePlaceholder(
+fun ImagePlaceholder(
     onPickFromGallery: () -> Unit,
     onTakePhoto: () -> Unit
 ) {
@@ -185,20 +236,21 @@ private fun AvatarCircle(name: String) {
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun PostCardPreview() {
     MaterialTheme {
         PostCard(
             post = cardpublication(
+                // ⚠️ Ajusta estos campos EXACTAMENTE a tu data class real
+                id = "1",
                 name = "Armando",
                 handle = "@armando",
                 dateTime = "Hoy · 19:38",
-                content = "Probando mi nuevo componente tipo post en Jetpack Compose 👌"
+                content = "Probando mi nuevo componente tipo post en Jetpack Compose 👌",
+                image = null
             ),
             modifier = Modifier.padding(16.dp)
         )
     }
 }
-
