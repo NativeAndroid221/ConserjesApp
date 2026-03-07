@@ -4,9 +4,17 @@ import android.net.Uri
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -14,14 +22,21 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.conserjes.data.cardpublication
@@ -34,126 +49,163 @@ fun PostCard(
     onClick: () -> Unit = {},
     onLike: () -> Unit = {},
     onShare: () -> Unit = {},
-
-    // ✅ shared transition (opcional)
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
-    OutlinedCard(
+    Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.outlinedCardColors(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.outlinedCardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AvatarCircle(post.name)
-
-                Spacer(Modifier.width(10.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-
-                        val nameModifier =
-                            if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                                with(sharedTransitionScope) {
-                                    Modifier.sharedElement(
-                                        sharedContentState = rememberSharedContentState(
-                                            key = "postName-${post.id}"
-                                        ),
-                                        animatedVisibilityScope = animatedVisibilityScope
-                                    )
-                                }
-                            } else Modifier
-
-                        Text(
-                            text = post.name,
-                            modifier = nameModifier,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Spacer(Modifier.width(8.dp))
-
-                        Text(
-                            text = post.handle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Text(
-                        text = post.dateTime,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            val contentModifier =
-                if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                    with(sharedTransitionScope) {
-                        Modifier.sharedElement(
-                            sharedContentState = rememberSharedContentState(
-                                key = "postContent-${post.id}"
-                            ),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
-                    }
-                } else Modifier
-
-            Text(
-                text = post.content,
-                modifier = contentModifier,
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            if (post.image != null) {
-                Spacer(Modifier.height(12.dp))
-
+        Column {
+            if (post.images.isNotEmpty()) {
                 val imageModifier =
                     if (sharedTransitionScope != null && animatedVisibilityScope != null) {
                         with(sharedTransitionScope) {
                             Modifier.sharedElement(
                                 sharedContentState = rememberSharedContentState(
-                                    key = "postImage-${post.id}"
+                                    key = "postImage-${post.id}-0"
                                 ),
                                 animatedVisibilityScope = animatedVisibilityScope
                             )
                         }
                     } else Modifier
 
-                SelectedImage(
-                    uri = post.image,
-                    modifier = imageModifier
-                )
+                Box {
+                    AsyncImage(
+                        model = post.images.first(),
+                        contentDescription = "Imagen principal de la publicación",
+                        modifier = imageModifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 24.dp,
+                                    topEnd = 24.dp,
+                                    bottomStart = 0.dp,
+                                    bottomEnd = 0.dp
+                                )
+                            ),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    if (post.images.size > 1) {
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(10.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                            tonalElevation = 2.dp
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Image,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "+${post.images.size - 1}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
-            Spacer(Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                IconButton(onClick = onLike) {
-                    Icon(Icons.Default.FavoriteBorder, contentDescription = "Me gusta")
-                }
-                IconButton(onClick = onShare) {
-                    Icon(Icons.Default.Share, contentDescription = "Compartir")
+                ImportanceBadge(importance = post.importance)
+
+                val titleModifier =
+                    if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                        with(sharedTransitionScope) {
+                            Modifier.sharedElement(
+                                sharedContentState = rememberSharedContentState(
+                                    key = "postTitle-${post.id}"
+                                ),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            )
+                        }
+                    } else Modifier
+
+                Text(
+                    text = post.title,
+                    modifier = titleModifier,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                val contentModifier =
+                    if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                        with(sharedTransitionScope) {
+                            Modifier.sharedElement(
+                                sharedContentState = rememberSharedContentState(
+                                    key = "postContent-${post.id}"
+                                ),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            )
+                        }
+                    } else Modifier
+
+                Text(
+                    text = post.content,
+                    modifier = contentModifier,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SmallAuthorDot()
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = post.name,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = post.dateTime,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    IconButton(onClick = onLike) {
+                        Icon(
+                            imageVector = Icons.Default.FavoriteBorder,
+                            contentDescription = "Me gusta"
+                        )
+                    }
+
+                    IconButton(onClick = onShare) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Compartir"
+                        )
+                    }
                 }
             }
         }
@@ -161,43 +213,51 @@ fun PostCard(
 }
 
 @Composable
-private fun AvatarCircle(name: String) {
-    val initials = name.trim()
-        .split(" ")
-        .filter { it.isNotBlank() }
-        .take(2)
-        .joinToString("") { it.first().uppercaseChar().toString() }
+private fun ImportanceBadge(importance: String) {
+    val containerColor = when (importance.lowercase()) {
+        "alta" -> MaterialTheme.colorScheme.errorContainer
+        "media" -> MaterialTheme.colorScheme.tertiaryContainer
+        "baja" -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
 
-    Box(
-        modifier = Modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primaryContainer),
-        contentAlignment = Alignment.Center
+    val contentColor = when (importance.lowercase()) {
+        "alta" -> MaterialTheme.colorScheme.onErrorContainer
+        "media" -> MaterialTheme.colorScheme.onTertiaryContainer
+        "baja" -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = containerColor
     ) {
         Text(
-            text = initials.ifBlank { "?" },
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
+            text = importance,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = contentColor,
+            fontWeight = FontWeight.Medium
         )
     }
 }
 
-/** ✅ MODIFICADO: ahora recibe modifier */
 @Composable
-fun SelectedImage(
-    uri: Uri,
-    modifier: Modifier = Modifier
-) {
-    AsyncImage(
-        model = uri,
-        contentDescription = "Imagen seleccionada",
-        modifier = modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .clip(RoundedCornerShape(14.dp)),
-        contentScale = ContentScale.Crop
-    )
+private fun SmallAuthorDot() {
+    Box(
+        modifier = Modifier
+            .size(34.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+        )
+    }
 }
 
 @Composable
@@ -209,26 +269,43 @@ fun ImagePlaceholder(
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(16.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Sin foto", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "Sin fotos seleccionadas",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 OutlinedButton(onClick = onPickFromGallery) {
-                    Icon(Icons.Default.Image, contentDescription = "Galería")
-                    Spacer(Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = "Galería"
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text("Galería")
                 }
+
                 OutlinedButton(onClick = onTakePhoto) {
-                    Icon(Icons.Default.CameraAlt, contentDescription = "Cámara")
-                    Spacer(Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = "Cámara"
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text("Cámara")
                 }
             }
@@ -236,19 +313,37 @@ fun ImagePlaceholder(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
+fun SelectedImage(
+    uri: Uri,
+    modifier: Modifier = Modifier
+) {
+    AsyncImage(
+        model = uri,
+        contentDescription = "Imagen seleccionada",
+        modifier = modifier
+            .fillMaxWidth()
+            .height(220.dp)
+            .clip(RoundedCornerShape(18.dp)),
+        contentScale = ContentScale.Crop
+    )
+}
+
+
+@Composable
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 fun PostCardPreview() {
     MaterialTheme {
         PostCard(
             post = cardpublication(
-                // ⚠️ Ajusta estos campos EXACTAMENTE a tu data class real
                 id = "1",
-                name = "Armando",
-                handle = "@armando",
-                dateTime = "Hoy · 19:38",
-                content = "Probando mi nuevo componente tipo post en Jetpack Compose 👌",
-                image = null
+                name = "Administración",
+                handle = "@admin",
+                dateTime = "12 Nov 2026, 09:45 AM",
+                title = "Actualización urgente de seguridad",
+                content = "Debido a incidentes recientes, se han implementado nuevos protocolos de acceso para visitantes a partir de mañana. Por favor revise los detalles en portería.",
+                importance = "Alta",
+                images = emptyList()
             ),
             modifier = Modifier.padding(16.dp)
         )

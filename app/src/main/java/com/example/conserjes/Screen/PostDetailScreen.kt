@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -28,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.conserjes.Components.SelectedImage
+
 import com.example.conserjes.data.cardpublication
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -59,13 +63,23 @@ fun PostDetailScreen(
                 NavigationBarItem(
                     selected = false,
                     onClick = onLike,
-                    icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = "Me gusta") },
+                    icon = {
+                        Icon(
+                            Icons.Default.FavoriteBorder,
+                            contentDescription = "Me gusta"
+                        )
+                    },
                     label = { Text("Me gusta") }
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = onShare,
-                    icon = { Icon(Icons.Default.Share, contentDescription = "Compartir") },
+                    icon = {
+                        Icon(
+                            Icons.Default.Share,
+                            contentDescription = "Compartir"
+                        )
+                    },
                     label = { Text("Compartir") }
                 )
             }
@@ -81,7 +95,6 @@ fun PostDetailScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
 
-                // ✅ Nombre: shared element
                 with(sharedTransitionScope) {
                     Text(
                         text = post.name,
@@ -109,7 +122,6 @@ fun PostDetailScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // ✅ Contenido: shared element
             with(sharedTransitionScope) {
                 Text(
                     text = post.content,
@@ -123,18 +135,24 @@ fun PostDetailScreen(
                 )
             }
 
-            // ✅ Imagen: shared element
-            if (post.image != null) {
-                with(sharedTransitionScope) {
-                    SelectedImage(
-                        uri = post.image,
-                        modifier = Modifier.sharedElement(
-                            sharedContentState = rememberSharedContentState(
-                                key = "postImage-${post.id}"
-                            ),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
-                    )
+            if (post.images.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    itemsIndexed(post.images) { index, imageUri ->
+                        with(sharedTransitionScope) {
+                            SelectedImage(
+                                uri = imageUri,
+                                modifier = Modifier.sharedElement(
+                                    sharedContentState = rememberSharedContentState(
+                                        key = "postImage-${post.id}-$index"
+                                    ),
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }
